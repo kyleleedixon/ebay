@@ -1,0 +1,20 @@
+name: Scheduled scan
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Trigger /api/cron/scan
+        env:
+          SCAN_URL: ${{ secrets.SCAN_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          curl -sS -f -X GET "$SCAN_URL" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            --max-time 320
