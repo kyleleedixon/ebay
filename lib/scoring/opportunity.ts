@@ -98,8 +98,10 @@ function computeConfidence(args: {
   const cov = comp.median > 0 ? comp.stdev / comp.median : 1;
   const stabilityScore = Math.max(0, 1 - cov) * 0.2;
 
-  // Source quality: sold > active. 0..0.15
-  const sourceScore = comp.source === "sold" ? 0.15 : 0.075;
+  // Source quality: sold comps are ground truth; active comps are
+  // aspirational asks and consistently overstate real sale price by 2-3x
+  // on graded cards. Zero-weight active until Marketplace Insights is on.
+  const sourceScore = comp.source === "sold" ? 0.15 : 0;
 
   // Key strength. 0..0.15
   const keyScore = keyStrength(key) * 0.15;
@@ -119,7 +121,9 @@ function computeConfidence(args: {
     sellerScore = 0.1; // unknown seller: neutral-ish
   }
 
-  return Math.max(0, Math.min(1,
-    sampleScore + stabilityScore + sourceScore + keyScore + marginPenalty + sellerScore,
-  ));
+  const raw = sampleScore + stabilityScore + sourceScore + keyScore + marginPenalty + sellerScore;
+  // Hard cap active-source confidence below MIN_CONFIDENCE default (0.6) so
+  // active-listing hits never surface until sold comps are wired in.
+  const cap = comp.source === "active" ? 0.55 : 1;
+  return Math.max(0, Math.min(cap, raw));
 }

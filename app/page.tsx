@@ -14,7 +14,7 @@ async function loadOpportunities(): Promise<DisplayOpportunity[]> {
       .where(
         and(
           isNull(schema.opportunities.dismissedAt),
-          gte(schema.opportunities.confidence, 0.5),
+          gte(schema.opportunities.confidence, 0.6),
         ),
       )
       .orderBy(desc(schema.opportunities.marginUsd))
